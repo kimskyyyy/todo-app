@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.ColumnDefault;
 
 @Builder
 @NoArgsConstructor
@@ -14,5 +15,7 @@ public class TodoRequestDTO {
     private String memberId;
     private String title;
     private String content;
+
+    @ColumnDefault("false")
     private boolean completion;
 }

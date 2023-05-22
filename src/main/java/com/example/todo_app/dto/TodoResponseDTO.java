@@ -18,4 +18,7 @@ public class TodoResponseDTO {
     private String title;
     private String content;
     private boolean completion;
+
+    public TodoResponseDTO(Todo todo) {
+    }
 }
