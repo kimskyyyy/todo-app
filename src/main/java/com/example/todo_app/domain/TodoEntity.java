@@ -17,7 +17,7 @@ import javax.persistence.Table;
 @Data
 @Entity
 @Table(name = "Todos")
-public class Todo {
+public class TodoEntity {
 
     @Id
     @GeneratedValue(generator="system-uuid")
@@ -25,6 +25,5 @@ public class Todo {
     private String id;
     private String memberId;
     private String title;
-    private String content;
     private boolean completion;
 }

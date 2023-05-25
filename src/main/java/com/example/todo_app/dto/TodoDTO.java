@@ -1,40 +1,37 @@
 package com.example.todo_app.dto;
 
-import com.example.todo_app.domain.Todo;
+import com.example.todo_app.domain.TodoEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.ColumnDefault;
 
-//@Builder
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class TodoRequestDTO {
+public class TodoDTO {
     private String id;
-    private String memberId;
     private String title;
-    private String content;
+//    private String memberId;
 
     @ColumnDefault("false")
     private boolean completion;
 
-    public TodoRequestDTO(final Todo todo) {
-        this.id = todo.getId();
-        this.memberId = todo.getMemberId();
-        this.title = todo.getTitle();
-        this.content = todo.getContent();
-        this.completion = todo.isCompletion();
+    public TodoDTO(final TodoEntity todoEntity) {
+        this.id = todoEntity.getId();
+//        this.memberId = todoEntity.getMemberId();
+        this.title = todoEntity.getTitle();
+        this.completion = todoEntity.isCompletion();
     }
 
-    public static Todo toEntity(final TodoRequestDTO todoRequestDTO) {
-        return Todo.builder()
-                .id(todoRequestDTO.getId())
-                .memberId(todoRequestDTO.getMemberId())
-                .title(todoRequestDTO.getTitle())
-                .content(todoRequestDTO.getContent())
-                .completion(todoRequestDTO.isCompletion())
+    public static TodoEntity toEntity(final TodoDTO todoDTO) {
+        return TodoEntity.builder()
+                .id(todoDTO.getId())
+//                .memberId(todoDTO.getMemberId())
+                .title(todoDTO.getTitle())
+                .completion(todoDTO.isCompletion())
                 .build();
     }
 }

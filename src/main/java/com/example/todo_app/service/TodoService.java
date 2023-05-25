@@ -1,8 +1,8 @@
 package com.example.todo_app.service;
 
-import com.example.todo_app.domain.Todo;
-import com.example.todo_app.dto.TodoRequestDTO;
-import com.example.todo_app.dto.TodoResponseDTO;
+import com.example.todo_app.common.ResponseDTO;
+import com.example.todo_app.domain.TodoEntity;
+import com.example.todo_app.dto.TodoDTO;
 import com.example.todo_app.repository.TodoRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,96 +20,77 @@ public class TodoService {
     private TodoRepository todoRepository;
 
     // todo 전체 리스트 조회
-    public List<TodoResponseDTO> getAllTodo() {
-        List<Todo> allTodo = todoRepository.findAll();
-
-        System.out.println(allTodo);
-        List<TodoResponseDTO> todoList = new ArrayList<>();
-        for(Todo todo : allTodo) {
-            todoList.add(TodoResponseDTO.builder()
-                    .id(todo.getId())
-                    .memberId(todo.getMemberId())
-                    .title(todo.getTitle())
-                    .content(todo.getContent())
-                    .build());
-
-        }
-
-        return todoList;
-
-    }
-
-    // todo 단건 조회
-    public List<TodoResponseDTO> getTodo(String id) {
-        Optional<Todo> todo = todoRepository.findById(id);
-        List<TodoResponseDTO> todoResponse = todo.stream().map(TodoResponseDTO::new).collect(Collectors.toList());
-        return todoResponse;
-    }
+//    public List<TodoEntity> getAllTodo() {
+//        List<TodoEntity> allTodoEntity = todoRepository.findAll();
+//
+//        System.out.println(allTodoEntity);
+//        List<TodoResponseDTO> todoList = new ArrayList<>();
+//        for(TodoEntity todo : allTodoEntity) {
+//            todoList.add(TodoResponseDTO.builder()
+//                    .id(todo.getId())
+//                    .title(todo.getTitle())
+//                    .build());
+//        }
+//        return todoList;
+//    }
 
     // 사용자(member)별 todo list 조회
-    public List<TodoResponseDTO> getMemTodo(String memberId) {
-        Optional<Todo> todo = todoRepository.findByMemberId(memberId);
-        List<TodoResponseDTO> memTodos = todo.stream().map(TodoResponseDTO::new).collect(Collectors.toList());
-        return memTodos;
+    public List<TodoEntity> getMemTodo(final String memberId) {
+        return todoRepository.findByMemberId((memberId));
     }
 
     // todo 생성
-    public TodoResponseDTO createTodo(TodoRequestDTO todoRequestDTO) {
+    public List<TodoEntity> createTodo(final TodoEntity entity) {
 
         //Validations
-        validate(todoRequestDTO);
+        validate(entity);
+        todoRepository.save(entity);
 
-
-        Todo todo = Todo.builder()
-                .memberId(todoRequestDTO.getMemberId())
-                .title(todoRequestDTO.getTitle())
-                .content(todoRequestDTO.getContent())
-                .build();
-        todoRepository.save(todo);
-
-        TodoResponseDTO todoResponseDto = TodoResponseDTO.builder()
-                .memberId(todo.getMemberId())
-                .title(todo.getTitle())
-                .content(todo.getContent())
-                .build();
-    return todoResponseDto;
+        return todoRepository.findByMemberId(entity.getMemberId());
     }
 
-    public TodoResponseDTO updateTodo(String id, TodoRequestDTO todoRequestDTO) {
+    public List<TodoEntity> updateTodo(final TodoEntity entity) {
         // 데이터 검증
-        validate(todoRequestDTO);
+        validate(entity);
 
-        final Optional<Todo> original = todoRepository.findById(id);
+        final Optional<TodoEntity> original = todoRepository.findById(entity.getId());
 
-        final Todo todo = original.get();
-        todo.setMemberId((todoRequestDTO.getMemberId()));
-        todo.setTitle(todoRequestDTO.getTitle());
-        todo.setContent(todoRequestDTO.getContent());
-        todo.setCompletion(todoRequestDTO.isCompletion());
-        System.out.println(todoRequestDTO.isCompletion());
-        todoRepository.save(todo);
+        original.ifPresent(todo -> {
+            todo.setTitle(entity.getTitle());
+            todo.setCompletion(entity.isCompletion());
+            todoRepository.save(todo);
+        });
 
-        TodoResponseDTO todoResponseDto = TodoResponseDTO.builder()
-                .memberId(todo.getMemberId())
-                .title(todo.getTitle())
-                .content(todo.getContent())
-                .build();
-        return todoResponseDto;
+        return getMemTodo(entity.getMemberId());
 
     }
 
-    public void deleteTodo(String id) {
+    public List<TodoEntity> deleteTodo(final TodoEntity entity) {
+        validate(entity);
+
+        try {
+            // 2. 엔티티 삭제
+            todoRepository.delete(entity);
+        } catch(Exception e) {
+            // 3. exception 발생 시 ID와 exception 로깅
+            log.error("error deleting entity", entity.getId(), e);
+
+            // 4. 컨트롤러로 Exception을 보냄, 데이터베이스 내부 로직을 캡슐화하려면 e를 리턴하지 않고 새 exception 오브젝트 리턴
+            throw new RuntimeException("error deleting entity" + entity.getId());
+        }
+        // 5. 새 Todo 리스트를 가져와 리턴
+        return getMemTodo(entity.getMemberId());
 
     }
 
     // 데이터 검증
-    private void validate(TodoRequestDTO todoRequestDTO) {
-        if(todoRequestDTO == null) {
+    private void validate(TodoEntity entity) {
+        if(entity == null) {
             log.warn("todoRequestDTO cannot be null");
             throw new RuntimeException("todoRequestDTO cannot be null");
         }
 
-        if(todoRequestDTO.getMemberId() == null) {
+        if(entity.getMemberId() == null) {
             log.warn("Unknown member");
             throw new RuntimeException("Unknown member");
         }

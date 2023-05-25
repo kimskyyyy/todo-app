@@ -1,12 +1,13 @@
 package com.example.todo_app.repository;
 
-import com.example.todo_app.domain.Todo;
+import com.example.todo_app.domain.TodoEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
+import java.util.List;
 
 @Repository
-public interface TodoRepository extends JpaRepository<Todo, String> {
-    Optional<Todo> findByMemberId(String memberId);
+public interface TodoRepository extends JpaRepository<TodoEntity, String> {
+    List<TodoEntity> findByMemberId(String memberId);
+
 }
