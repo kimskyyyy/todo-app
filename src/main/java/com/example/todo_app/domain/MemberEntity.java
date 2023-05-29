@@ -27,6 +27,6 @@ public class MemberEntity {
     @Column(nullable = false)
     private String email;
 
-    @Column(nullable = false)
+    @Column(name = "password",nullable = false)
     private String password;
 }

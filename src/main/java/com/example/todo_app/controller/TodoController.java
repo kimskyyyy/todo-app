@@ -6,33 +6,43 @@ import com.example.todo_app.dto.TodoDTO;
 import com.example.todo_app.service.TodoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/todo")
+@RequestMapping("/todo")
 public class TodoController {
 
     @Autowired
     private TodoService todoService;
 
+    // Test
+    public ResponseEntity<Object> testTodo() {
+        String str = todoService.testService();
+        List<String> list = new ArrayList<>();
+        list.add(str);
+        ResponseDTO<String> response = ResponseDTO.<String>builder().data(list).build();
+        return ResponseEntity.ok(response);
+    }
+
+
 
     // todo 생성
     @PostMapping
-    public ResponseEntity<Object> createTodo(@RequestBody TodoDTO todoDTO) {
+    public ResponseEntity<Object> createTodo(@AuthenticationPrincipal String memberId, @RequestBody TodoDTO todoDTO) {
         try {
-            String temporaryMemberId = "temporary-member";
-
-            // 1. dto -> TodoEntity, 'TodoEntity'로 변환
+            // 1. dto -> TodoEntity, 'TodoEntity' 로 변환
             TodoEntity entity = TodoDTO.toEntity(todoDTO);
 
             // 2. id를 NUll로 초기화
             entity.setId(null);
 
-            // 3. 임시 사용자 아이디 설정
-            entity.setMemberId(temporaryMemberId);
+            // 3. 사용자 아이디 설정
+            entity.setMemberId(memberId);
 
             // 4. 서비스를 이용해 TODO Entity 생성
             List<TodoEntity> entities = todoService.createTodo(entity);
@@ -53,27 +63,13 @@ public class TodoController {
         }
     }
 
-    // todoList 조회(전체 조회)
-//    @GetMapping
-//    public ResponseEntity<Object> getAllTodo() {
-//
-//        return ResponseEntity.ok().body(responseDTO);
-//    }
-
-    // todo 조회
-//    @GetMapping("/{id}")
-//    public ResponseEntity<Object> getTodo(@PathVariable(value = "id", required = false) String id) {
-//        System.out.println("id: " + id);
-//        List<TodoEntity> responseDTO = todoService.getTodo(id);
-//        return ResponseEntity.ok().body(responseDTO);
-//
-//    }
 
     // 사용자(member) 별 todo 조회
-    @GetMapping("/member/{id}")
-    public ResponseEntity<Object> getMemTodo(@RequestParam(value ="id", required = false) String id) {
+    @GetMapping
+    public ResponseEntity<Object> getMemTodo(@AuthenticationPrincipal String memberId) {
+
         // 1. 서비스 메서드의 getMemToto() 메서드를 사용해 Todo 리스트를 가져온다.
-        List<TodoEntity> entities = todoService.getMemTodo(id);
+        List<TodoEntity> entities = todoService.getMemTodo(memberId);
 
         // 2. 자바 스트림을 이용해 리턴된 엔터티 리스트를 TodoDTO 리스트로 변환
         List<TodoDTO> dtos = entities.stream().map(TodoDTO::new).collect(Collectors.toList());
@@ -85,16 +81,18 @@ public class TodoController {
         return ResponseEntity.ok().body(response);
     }
 
-    @PutMapping("/{id}")
+
+
+
+    @PutMapping
 //    public ResponseEntity<Object> updateTodo(@PathVariable("id") String id, @RequestBody TodoDTO todoDTO) {
-    public ResponseEntity<Object> updateTodo(@RequestBody TodoDTO todoDTO) {
-        String temporaryMemberId = "temporary-member";
+    public ResponseEntity<Object> updateTodo(@AuthenticationPrincipal String memberId, @RequestBody TodoDTO todoDTO) {
 
         // 1. dto를 entity로 변환
         TodoEntity entity = TodoDTO.toEntity(todoDTO);
 
         // 2. id를 temporaryMemberId로 초기화
-        entity.setMemberId(temporaryMemberId);
+        entity.setMemberId(memberId);
 
         // 3. 서비스를 이용해 entity 업데이트
         List<TodoEntity> entities = todoService.updateTodo(entity);
@@ -109,16 +107,15 @@ public class TodoController {
         return ResponseEntity.ok().body(response);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Object> deleteTodo(@RequestBody TodoDTO todoDTO) {
+    @DeleteMapping
+    public ResponseEntity<Object> deleteTodo(@AuthenticationPrincipal String memberId, @RequestBody TodoDTO todoDTO) {
         try {
-            String temporaryMemberId = "temporary-member";
 
             // 1. TodoEntity로 변환
             TodoEntity entity = TodoDTO.toEntity(todoDTO);
 
             // 2. 임시 사용자 아이디 설정
-            entity.setMemberId(temporaryMemberId);
+            entity.setMemberId(memberId);
 
             // 3. 서비스를 이용해 ENTITY 삭제
             List<TodoEntity> entities = todoService.deleteTodo(entity);

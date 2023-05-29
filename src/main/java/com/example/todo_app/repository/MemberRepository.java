@@ -4,6 +4,8 @@ import com.example.todo_app.domain.MemberEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface MemberRepository extends JpaRepository<MemberEntity, String> {
 
@@ -11,6 +13,5 @@ public interface MemberRepository extends JpaRepository<MemberEntity, String> {
     Boolean existsByEmail(String email);
     MemberEntity findByEmailAndPassword(String email, String password);
 
-
-
+    MemberEntity findByUsername(String username);
 }

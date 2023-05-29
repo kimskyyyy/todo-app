@@ -4,7 +4,10 @@ import com.example.todo_app.domain.MemberEntity;
 import com.example.todo_app.repository.MemberRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Slf4j
 @Service
@@ -27,7 +30,20 @@ public class MemberService {
         return memberRepository.save(memberEntity);
     }
 
-    public MemberEntity getByCredentials(final String email, final String password) {
-        return memberRepository.findByEmailAndPassword(email, password);
+    public List<MemberEntity> getMembers() {
+        return memberRepository.findAll();
     }
+
+    public MemberEntity getByCredentials(final String email, final String password, final PasswordEncoder encoder) {
+        final MemberEntity originalMember = memberRepository.findByEmail(email);
+
+        // matches 메서드를 이용해 패스워드 일치 체크
+        if(originalMember != null && encoder.matches(password, originalMember.getPassword())) {
+            System.out.println("password: " + password + ", originalMember: " + originalMember);
+            return originalMember;
+        }
+        return null;
+
+    }
+
 }
